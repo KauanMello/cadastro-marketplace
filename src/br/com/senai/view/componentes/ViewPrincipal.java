@@ -61,14 +61,6 @@ public class ViewPrincipal extends JFrame {
 		});
 		btnConfiguracoes.add(btnHorariosAtendimento);
 		
-		JMenuItem btnNotificacoes = new JMenuItem("Notificações");
-		btnNotificacoes.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				new ViewConfiguracaoEmail(ViewPrincipal.this).setVisible(true);
-			}
-		});
-		btnConfiguracoes.add(btnNotificacoes);
-		
 		JMenuItem bntmSair = new JMenuItem("Sair");
 		bntmSair.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
