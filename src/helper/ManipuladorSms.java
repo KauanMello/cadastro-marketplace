@@ -69,7 +69,7 @@ public class ManipuladorSms {
 		}else if (isAtivo.equals("false")) {
 			return false;
 		}else {
-			throw new IllegalArgumentException("valor incorreto");
+			throw new IllegalArgumentException("valor incorreto, verifique os valores do arquivo de configuração de sms");
 		}
 	}
 	

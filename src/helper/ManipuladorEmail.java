@@ -55,6 +55,7 @@ public class ManipuladorEmail {
 		try {
 			isAtivo = getProp().getProperty("prop.is_ativo");
 		} catch (IOException e) {
+			System.out.println("Valor incorreto, verifique no arquivo de configuração de sms");
 			e.printStackTrace();
 		}
 		
