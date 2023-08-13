@@ -32,6 +32,8 @@ import br.com.senai.core.domain.Restaurante;
 import br.com.senai.core.service.HorarioAtendimentoService;
 import br.com.senai.core.service.RestauranteService;
 import br.com.senai.view.componentes.table.HorarioAtendimentoTableModel;
+import helper.SendEmail;
+import helper.SendSms;
 import helper.SwingWorkerHelper;
 import helper.ViewHelper;
 
@@ -242,6 +244,62 @@ public class ViewGerenciarHorariosCadastro extends JDialog {
 		return isEditar;
 	}
 	
+	public void sendEmail(String tabelaAnterior, String tabelaNova) {
+		SwingWorkerHelper.workerUtilitario(() -> {
+			SendEmail.enviarEmail("Alteração na tabela de horários", 
+					"<center> <br> O restaurante: <b>" + cbxRestaurante.getSelectedItem() 
+					+ "</b> foi alterado de: <br><br>" + tabelaAnterior 
+					+ "<br> Para: <br><br>" + tabelaNova + "</center>");
+			return null;
+		}, null);
+	}
+	
+	public String montarTabelaPersonalizada(int id, String colorLine) {
+		
+		Restaurante restaurante = (Restaurante) cbxRestaurante.getSelectedItem();
+		List<HorarioAtendimento> horariosEncontrados = horarioAtendimentoService.listarPor(restaurante);
+		StringBuilder html = new StringBuilder();
+		
+		html.append("<table style='width: 30%; border-collapse: collapse;'>"
+				+ "<thead>"
+				+ "<tr style='background-color: darkblue; color: white;'>"
+				+ "<th style='border: 1px solid gray; font-weight: bold; padding: 10px; text-align: center;'>Dia da semana</th>"
+				+ "<th style='border: 1px solid gray; font-weight: bold; padding: 10px; text-align: center;'>Horario abertura</th>"
+				+ "<th style='border: 1px solid gray; font-weight: bold; padding: 10px; text-align: center;'>Horario fechamento</th>"
+				+ "</tr>"
+				+ "</thead>"
+				+ "<tbody style='border: 1px solid gray;'>");
+		
+		for (HorarioAtendimento horarioAtendimento : horariosEncontrados) {
+			
+			if (horarioAtendimento.getId() == id) {
+				html.append("<tr style='padding: 10px;'>"
+						+ "<td style='border: 1px solid gray; background-color:" + colorLine + "; text-align: center;'>" + horarioAtendimento.getDiaDaSemana() + "</td>"
+						+ "<td style='border: 1px solid gray; background-color:" + colorLine + "; text-align: center;'>" + horarioAtendimento.getHoraAbertura() + "</td>"
+						+ "<td style='border: 1px solid gray; background-color:" + colorLine + "; text-align: center;'>" + horarioAtendimento.getHoraFechamento() + "</td>"
+						+ "</tr>");
+			}else {
+				html.append("<tr style='padding: 10px;'>"
+						+ "<td style='border: 1px solid gray; text-align: center;'>" + horarioAtendimento.getDiaDaSemana() + "</td>"
+						+ "<td style='border: 1px solid gray; text-align: center;'>" + horarioAtendimento.getHoraAbertura() + "</td>"
+						+ "<td style='border: 1px solid gray; text-align: center;'>" + horarioAtendimento.getHoraFechamento() + "</td>"
+						+ "</tr>");
+			}
+		}
+		html.append("</tbody>"
+				+ "</table>");
+		
+		System.out.println(html);
+		return html.toString();
+	}
+	
+	public void sendSms(String mensagem) {
+		SwingWorkerHelper.workerUtilitario(() -> {
+			SendSms.enviarSms(mensagem);
+			return null;
+		}, null);
+	}
+	
 	public void setarHorariosAtendimentoNosCampos(HorarioAtendimento horarioAtendimentoSelecionado) {
 		this.horarioAtendimento = horarioAtendimentoSelecionado;
 		this.cbxRestaurante.setSelectedItem(horarioAtendimentoSelecionado.getRestaurante());
@@ -275,9 +333,13 @@ public class ViewGerenciarHorariosCadastro extends JDialog {
 			LocalTime abertura = ViewHelper.extrairHoraDo(txtAbertura);
 			LocalTime fechamento = ViewHelper.extrairHoraDo(txtFechamento);
 			
+			
+			String tabelaAnterior = "";
+			
 			if (horarioAtendimento == null || !getIsEditando()) {
 				horarioAtendimento = new HorarioAtendimento(diaDaSemana, abertura, fechamento, restaurante);
 			}else {
+				tabelaAnterior = montarTabelaPersonalizada(horarioAtendimento.getId(), "rgb(245, 145, 145)");
 				horarioAtendimento.setRestaurante(restaurante);
 				horarioAtendimento.setDiaDaSemana(diaDaSemana);
 				horarioAtendimento.setHoraAbertura(abertura);
@@ -287,6 +349,8 @@ public class ViewGerenciarHorariosCadastro extends JDialog {
 			if (getIsEditando()) {
 				horarioAtendimentoService.salvar(horarioAtendimento);
 				JOptionPane.showMessageDialog(contentPane, "Horario foi alterado com sucesso");
+				sendEmail(tabelaAnterior, montarTabelaPersonalizada(horarioAtendimento.getId(), "lightgreen"));
+				sendSms("Ocorreu uma alteração na tabela de horario. ");
 				setIsEditando(false);
 			}else {
 				horarioAtendimentoService.salvar(horarioAtendimento);
